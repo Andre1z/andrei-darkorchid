@@ -1,0 +1,202 @@
+/* style.css */
+
+/* Ensure html/body fill screen, and body is a row flex container 
+   so #left-pane and #right-pane are side by side. */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: row; /* left pane + right pane side-by-side */
+  background: linear-gradient(to bottom right, #2c3e50, #34495e);
+  color: #333;
+}
+
+/* Left Pane: fixed width, full height */
+#left-pane {
+  width: 320px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255,255,255,0.9);
+}
+
+/* Right Pane: fill remaining horizontal space */
+#right-pane {
+  flex: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative; /* so fullscreenBtn can be positioned absolutely */
+}
+
+/* Fullscreen button in top-right corner */
+#fullscreenBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 999;
+  padding: 8px 12px;
+  border: none;
+  background: #2980b9;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+}
+#fullscreenBtn:hover {
+  background: #3498db;
+}
+
+/* The main video container, filling #right-pane */
+#video-container {
+  flex: 1;
+  display: flex;
+  align-items: center;    /* center video vertically */
+  justify-content: center;/* center video horizontally */
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: #000;       /* behind the video */
+}
+
+/* Let the video fill the container width while keeping aspect ratio */
+video {
+  width: 100%;
+  max-width: 1000px; /* optional max width if you like */
+  height: auto;
+  background: #000;
+  border: none;
+}
+
+/* Chat container at top of left pane */
+#chat-container {
+  flex: 0.6; /* ~60% of left-pane height */
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #ccc;
+}
+
+#chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  font-size: 14px;
+  line-height: 1.4em;
+  color: #333;
+}
+
+#chat-input-container {
+  display: flex;
+  background: #f4f4f4;
+  padding: 8px;
+}
+
+#chat-input {
+  flex: 1;
+  margin-right: 5px;
+  border: 1px solid #ccc;
+  padding: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+#chat-send-btn {
+  border: none;
+  background: #2980b9;
+  color: #fff;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#chat-send-btn:hover {
+  background: #3498db;
+}
+
+/* Attendants list at bottom of left pane */
+#attendants-container {
+  flex: 0.4; /* ~40% of left-pane height */
+  overflow-y: auto;
+  padding: 10px;
+  background: #fafafa;
+  border-top: 1px solid #ccc;
+}
+
+#attendants-container h3 {
+  margin-bottom: 8px;
+  font-weight: normal;
+}
+
+#attendants-list p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Login overlay (modal) */
+#loginOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.75);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+#loginBox {
+  background: #ecf0f1;
+  padding: 20px 30px;
+  border-radius: 6px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+#loginBox h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+#loginBox label {
+  display: block;
+  margin-top: 8px;
+  font-weight: bold;
+  color: #555;
+}
+
+.role-selection {
+  margin: 15px 0;
+}
+
+#nameField {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+#loginBtn {
+  margin-top: 15px;
+  padding: 8px 20px;
+  font-size: 14px;
+  border: none;
+  background: #2980b9;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#loginBtn:hover {
+  background: #3498db;
+}
+
+/* Hide overlay when .hidden is added */
+.hidden {
+  display: none !important;
+}
+
