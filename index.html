@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebRTC Collaboration App</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Encabezado -->
+  <header>
+    <h1>WebRTC Collaboration App</h1>
+  </header>
+
+  <!-- Contenedor principal -->
+  <main>
+    <!-- Sección de video -->
+    <section id="video-section">
+      <h2>Área de Video</h2>
+      <!-- Contenedor para el video local -->
+      <div id="localVideo-container">
+        <video id="localVideo" autoplay playsinline muted></video>
+      </div>
+      <!-- Contenedor para el video remoto -->
+      <div id="remoteVideo-container">
+        <video id="remoteVideo" autoplay playsinline></video>
+      </div>
+    </section>
+
+    <!-- Sección de chat -->
+    <section id="chat-section">
+      <h2>Chat</h2>
+      <div id="chat-messages"></div>
+      <div id="chat-controls">
+        <input type="text" id="chat-input" placeholder="Escribe tu mensaje...">
+        <button id="chat-send">Enviar</button>
+      </div>
+    </section>
+
+    <!-- Sección de controles -->
+    <section id="controls-section">
+      <button id="startCall">Iniciar llamada</button>
+      <button id="endCall" disabled>Finalizar llamada</button>
+    </section>
+  </main>
+
+  <!-- Pie de página -->
+  <footer>
+    <p>Proyecto basado en WebRTC sin servidor de señalización propio.</p>
+  </footer>
+
+  <!-- Inclusión de scripts -->
+  <script src="js/signaling.js"></script>
+  <script src="js/webrtc.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
