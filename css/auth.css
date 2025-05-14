@@ -1,0 +1,91 @@
+/* auth.css */
+
+/* Importar la fuente Montserrat para un estilo moderno */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+/* Estilos generales para la página de autenticación */
+body.auth-page {
+  font-family: 'Montserrat', sans-serif;
+  background: linear-gradient(135deg, #1DB9C3, #236B8E);
+  background-size: cover;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Contenedor del formulario (usa clase "auth-form-container") */
+.auth-form-container {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+/* Título del formulario */
+.auth-form-container h2 {
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  color: #fff;
+}
+
+/* Estilo de los labels */
+.auth-form-container label {
+  display: block;
+  text-align: left;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+/* Estilo de los campos de entrada */
+.auth-form-container input[type="text"],
+.auth-form-container input[type="password"],
+.auth-form-container input[type="email"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  font-size: 1rem;
+}
+
+/* Estilo del botón de envío */
+.auth-form-container input[type="submit"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #236B8E;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.auth-form-container input[type="submit"]:hover {
+  background: #1DB9C3;
+  transform: scale(1.05);
+}
+
+/* Estilo para los mensajes y enlaces de navegación */
+.auth-form-container p {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.auth-form-container a {
+  color: #1DB9C3;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.auth-form-container a:hover {
+  color: #fff;
+}

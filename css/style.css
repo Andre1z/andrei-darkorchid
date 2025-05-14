@@ -1,0 +1,190 @@
+/* Importar fuente moderna */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+/* Reset básico y estilos globales */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: linear-gradient(135deg, #1DB9C3, #236B8E);
+  animation: gradientCycle 15s ease infinite;
+  background-size: 400% 400%;
+  color: #fff;
+  min-height: 100vh;
+}
+
+/* Animación para el fondo */
+@keyframes gradientCycle {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Header */
+header {
+  padding: 1rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+header h1 {
+  font-size: 2rem;
+  letter-spacing: 1px;
+}
+
+/* Layout principal utilizando CSS Grid */
+main {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  margin: 1rem;
+}
+
+/* Sección de video */
+#video-section {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#video-section h2 {
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+/* Contenedores de video */
+#localVideo-container,
+#remoteVideo-container {
+  position: relative;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Sección de chat */
+#chat-section {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 500px;
+}
+
+#chat-messages {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.75rem;
+  border-radius: 8px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+#chat-messages div {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+/* Controles de chat */
+#chat-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+#chat-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+}
+
+#chat-send {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: #236B8E;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#chat-send:hover {
+  background: #1DB9C3;
+}
+
+/* Sección de controles de llamada */
+#controls-section {
+  grid-column: span 2;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+#controls-section button {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 12px;
+  background: #236B8E;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+#controls-section button:hover {
+  background: #1DB9C3;
+  transform: scale(1.05);
+}
+
+#controls-section button:disabled {
+  background: rgba(35, 107, 142, 0.5);
+  cursor: not-allowed;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+  margin-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Estilos para enlaces (por ejemplo, en login y registro) */
+a {
+  color: #1DB9C3;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #fff;
+}
+
+/* Responsive: Ajuste para pantallas pequeñas */
+@media (max-width: 768px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+}
