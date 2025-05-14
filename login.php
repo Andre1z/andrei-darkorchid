@@ -1,7 +1,9 @@
 <?php
+// login.php
+ob_start(); // Inicia el buffer de salida
 session_start();
 
-// Si el usuario ya inició sesión, redirige a index.php
+// Si el usuario ya inició sesión, redirigir a index.php
 if (isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit;
@@ -9,7 +11,7 @@ if (isset($_SESSION['user_id'])) {
 
 $message = "";
 
-// Procesamiento del formulario
+// Procesamiento del formulario cuando se envía via POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = isset($_POST["username"]) ? trim($_POST["username"]) : "";
     $password = isset($_POST["password"]) ? $_POST["password"] : "";
@@ -37,6 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $message = "Usuario no encontrado.";
                 } else {
                     if (password_verify($password, $row['password'])) {
+                        // Credenciales válidas: Iniciar sesión y redirigir a index.php
                         $_SESSION['user_id'] = $row['id'];
                         $_SESSION['username'] = $row['username'];
                         header("Location: index.php");
@@ -50,30 +53,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
+ob_end_flush(); // Envía la salida y limpia el buffer
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Inicio de Sesión - Mi Aplicación WebRTC</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
 </head>
-<body>
-  <h2>Inicio de Sesión</h2>
-  <?php
-    if (!empty($message)) {
-        echo '<p style="color:red;">' . htmlspecialchars($message) . '</p>';
-    }
-  ?>
-  <form method="post" action="login.php">
-      <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required>
-      <br>
-      <label for="password">Contraseña:</label>
-      <input type="password" id="password" name="password" required>
-      <br>
-      <input type="submit" value="Iniciar Sesión">
-  </form>
-  <p>¿No tienes cuenta? <a href="register.php">Regístrate aquí</a>.</p>
+<body class="auth-page">
+    <div class="auth-form-container">
+        <h2>Inicio de Sesión</h2>
+        <?php if (!empty($message)) { ?>
+            <p style="color:red;"><?php echo htmlspecialchars($message); ?></p>
+        <?php } ?>
+        <form method="post" action="login.php">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" name="password" required>
+            
+            <input type="submit" value="Iniciar Sesión">
+        </form>
+        <p>¿No tienes cuenta? <a href="register.php">Regístrate aquí</a>.</p>
+    </div>
 </body>
 </html>
