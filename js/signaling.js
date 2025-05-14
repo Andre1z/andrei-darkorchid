@@ -4,12 +4,12 @@
  * Este módulo implementa una señalización manual sin utilizar APIs externas.
  * 
  * La idea es facilitar la transferencia de mensajes de señalización de forma
- * manual: cuando se envía un mensaje se muestra en un alert para que el usuario lo copie,
- * y para recibir un mensaje se le pedirá que lo pegue en un prompt.
+ * manual; sin embargo, en esta versión se copia automáticamente el mensaje al
+ * portapapeles para que el usuario simplemente lo comparta con la otra parte.
  *
  * Interfaz:
  *  - signaling.connect(): inicializa el modo manual.
- *  - signaling.send(message): muestra el mensaje (formateado) para que el usuario lo copie.
+ *  - signaling.send(message): copia automáticamente el mensaje (formateado) al portapapeles.
  *  - signaling.receive(): solicita al usuario que pegue un mensaje y lo procesa.
  *
  * Callbacks:
@@ -36,16 +36,31 @@ const signaling = {
 
   /**
    * send(message)
-   * Convierte el objeto de señalización a una cadena JSON y lo muestra para que el usuario lo copie.
+   * Convierte el objeto de señalización a una cadena JSON y lo copia automáticamente al portapapeles.
+   * Si la copia automática falla (por ejemplo, por falta de permisos o de compatibilidad),
+   * se muestra una alerta para que el usuario copie manualmente el mensaje.
+   *
    * @param {Object} message - Objeto con la información de señalización.
    */
   send: function(message) {
     try {
       const messageStr = JSON.stringify(message);
-      // Mostrar en la consola para referencia
       console.log("Mensaje de señalización a enviar:\n", messageStr);
-      // Alert para que el usuario lo copie manualmente
-      alert("Copie el siguiente mensaje y compártalo con la otra parte:\n\n" + messageStr);
+      
+      // Intentamos copiar automáticamente al portapapeles
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(messageStr)
+          .then(() => {
+            alert("El mensaje se ha copiado automáticamente al portapapeles:\n\n" + messageStr);
+          })
+          .catch(error => {
+            console.error("Error al copiar el mensaje al portapapeles:", error);
+            alert("No se pudo copiar el mensaje automáticamente. Por favor, copie manualmente:\n\n" + messageStr);
+          });
+      } else {
+        // Fallback: si el API no está disponible, se usa alert
+        alert("Copie el siguiente mensaje y compártalo con la otra parte:\n\n" + messageStr);
+      }
     } catch (e) {
       console.error("Error al enviar el mensaje:", e);
       if (this.onError) {
