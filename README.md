@@ -19,6 +19,7 @@ Características:
 
 Estructura del Proyecto:
 --------------------------
+```
 andrei-darkorchid/
 ├── css/
 │   ├── auth.css         --> Estilos para páginas de autenticación (login/register)
@@ -34,6 +35,7 @@ andrei-darkorchid/
 ├── login.php            --> Formulario de inicio de sesión
 ├── register.php         --> Formulario de registro de nuevos usuarios
 └── logout.php           --> Script para cerrar sesión y redireccionar al login
+```
 
 Requisitos:
 ------------
