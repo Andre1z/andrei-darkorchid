@@ -1,85 +1,34 @@
 /**
  * signaling.js
  * 
- * Este módulo implementa la señalización usando Firebase Realtime Database.
- * Se utiliza para intercambiar mensajes de señalización (SDP, ICE candidates, etc.)
- * entre pares WebRTC sin disponer de un servidor de Node.js propio.
- *
- * Requisitos:
- *  - Incluir Firebase en el HTML.
- *  - Configurar Firebase con los parámetros propios de tu proyecto.
+ * Este módulo implementa una señalización manual sin utilizar APIs externas.
+ * 
+ * La idea es facilitar la transferencia de mensajes de señalización de forma
+ * manual: cuando se envía un mensaje se muestra en un alert para que el usuario lo copie,
+ * y para recibir un mensaje se le pedirá que lo pegue en un prompt.
  *
  * Interfaz:
- *  - signaling.connect() inicia la conexión a la "sala" de señalización.
- *  - signaling.send(message) envía un mensaje a la sala.
+ *  - signaling.connect(): inicializa el modo manual.
+ *  - signaling.send(message): muestra el mensaje (formateado) para que el usuario lo copie.
+ *  - signaling.receive(): solicita al usuario que pegue un mensaje y lo procesa.
  *
- * Callbacks que podrás definir externamente:
- *  - signaling.onOpen: se invoca cuando se establece la conexión.
- *  - signaling.onError: se invoca si ocurre un error.
- *  - signaling.onMessage: se invoca con cada mensaje entrante.
- *  - signaling.onRemoteStream: (opcional) para delegar el stream remoto,
- *      aunque normalmente la lógica de WebRTC se encarga de ello.
+ * Callbacks:
+ *  - signaling.onOpen: se invoca al establecer la conexión (modo manual activado).
+ *  - signaling.onError: se invoca si ocurre algún error.
+ *  - signaling.onMessage: se invoca al recibir (manualmente) un mensaje.
  */
 
-// Configuración de Firebase (reemplaza con tus propios datos)
-const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_AUTH_DOMAIN",
-  databaseURL: "TU_DATABASE_URL",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_STORAGE_BUCKET",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
-};
-
-// Inicializamos Firebase (si aún no se ha inicializado)
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
-const db = firebase.database();
-
-let roomRef = null;
-let connected = false;
-
-// Objeto signaling que administrará la conexión de señalización.
 const signaling = {
-  // Callbacks que se pueden definir desde elsewhere (por ejemplo, en app.js)
-  onOpen: null,      // Se invoca cuando la conexión se establece.
-  onError: null,     // Se invoca en caso de errores en la conexión.
-  onMessage: null,   // Se invoca al recibir un mensaje de señalización.
-  // Opcional: onRemoteStream (puedes asignarla si decides emitir un stream a través de señalización)
-  onRemoteStream: null,
-  
-  roomId: null,      // Identificador de la sala de señalización.
+  onOpen: null,
+  onError: null,
+  onMessage: null,
 
   /**
    * connect()
-   * Genera o utiliza una sala (room) identificada por un roomId y
-   * se suscribe para recibir mensajes nuevos que se publiquen en esta.
+   * Inicializa el modo de señalización manual.
    */
   connect: function() {
-    // Intentamos obtener un roomId de la URL (hash) o generamos uno nuevo.
-    this.roomId = location.hash.substring(1) || this._generateRoomId();
-    location.hash = this.roomId;  // Actualiza la URL para facilitar el compartir la sala
-
-    // Referencia a la sala en Firebase
-    roomRef = db.ref('rooms/' + this.roomId);
-
-    // Escucha nuevos mensajes en la sala.
-    roomRef.on('child_added', snapshot => {
-      const message = snapshot.val();
-      // Aquí podrías filtrar mensajes (ej. omitir los que envió el mismo usuario si se agrega un ID)
-      if (this.onMessage) {
-        this.onMessage(message);
-      }
-    }, error => {
-      if (this.onError) {
-        this.onError(error);
-      }
-    });
-
-    connected = true;
+    console.log("Modo de señalización manual activado.");
     if (this.onOpen) {
       this.onOpen();
     }
@@ -87,31 +36,46 @@ const signaling = {
 
   /**
    * send(message)
-   * Envía un mensaje de señalización a la sala.
-   * @param {Object} message - Objeto que contiene la información de señalización.
+   * Convierte el objeto de señalización a una cadena JSON y lo muestra para que el usuario lo copie.
+   * @param {Object} message - Objeto con la información de señalización.
    */
   send: function(message) {
-    if (!connected || !roomRef) {
-      console.error("La conexión de señalización no está establecida.");
-      return;
-    }
-    // Agregamos un timestamp para ordenar mensajes si fuera necesario.
-    message.timestamp = Date.now();
-    // Opcionalmente, inyecta un identificador de remitente:
-    // message.sender = TU_IDENTIFICADOR;
-    roomRef.push(message, error => {
-      if (error && this.onError) {
-        this.onError(error);
+    try {
+      const messageStr = JSON.stringify(message);
+      // Mostrar en la consola para referencia
+      console.log("Mensaje de señalización a enviar:\n", messageStr);
+      // Alert para que el usuario lo copie manualmente
+      alert("Copie el siguiente mensaje y compártalo con la otra parte:\n\n" + messageStr);
+    } catch (e) {
+      console.error("Error al enviar el mensaje:", e);
+      if (this.onError) {
+        this.onError(e);
       }
-    });
+    }
   },
 
   /**
-   * _generateRoomId()
-   * Genera un identificador aleatorio para la sala.
-   * @return {string} Un nuevo roomId.
+   * receive()
+   * Solicita al usuario que pegue el mensaje de señalización recibido manualmente y lo procesa.
    */
-  _generateRoomId: function() {
-    return Math.random().toString(36).substr(2, 9);
+  receive: function() {
+    const messageStr = prompt("Pegue el mensaje de señalización recibido:");
+    if (!messageStr) {
+      console.warn("No se recibió mensaje.");
+      return;
+    }
+    
+    try {
+      const message = JSON.parse(messageStr);
+      if (this.onMessage) {
+        this.onMessage(message);
+      }
+    } catch(e) {
+      console.error("Error al parsear el mensaje:", e);
+      if (this.onError) {
+        this.onError(e);
+      }
+      alert("El mensaje recibido no es válido. Por favor, inténtelo de nuevo.");
+    }
   }
 };
