@@ -2,14 +2,14 @@
  * signaling.js
  * 
  * Este módulo implementa una señalización manual sin utilizar APIs externas.
- * 
- * La idea es facilitar la transferencia de mensajes de señalización de forma
- * manual; sin embargo, en esta versión se copia automáticamente el mensaje al
- * portapapeles para que el usuario simplemente lo comparta con la otra parte.
+ * Con esta versión se pretende que, en el caso de mensajes generados en respuesta a acciones del usuario
+ * (por ejemplo, ofertas o respuestas), se copien automáticamente; mientras que para aquellos generados automáticamente
+ * (como los ICE candidates) se solicite al usuario copiar manualmente.
  *
  * Interfaz:
  *  - signaling.connect(): inicializa el modo manual.
- *  - signaling.send(message): copia automáticamente el mensaje (formateado) al portapapeles.
+ *  - signaling.send(message): copia automáticamente el mensaje (formateado) al portapapeles para ofertas/respuestas,
+ *                             o muestra un alert para copia manual en caso de ICE candidates.
  *  - signaling.receive(): solicita al usuario que pegue un mensaje y lo procesa.
  *
  * Callbacks:
@@ -36,9 +36,9 @@ const signaling = {
 
   /**
    * send(message)
-   * Convierte el objeto de señalización a una cadena JSON y lo copia automáticamente al portapapeles.
-   * Si la copia automática falla (por ejemplo, por falta de permisos o de compatibilidad),
-   * se muestra una alerta para que el usuario copie manualmente el mensaje.
+   * Convierte el objeto de señalización a una cadena JSON y,
+   * dependiendo del tipo de mensaje, lo copia automáticamente al portapapeles
+   * o se muestra un alert para que el usuario lo copie manualmente.
    *
    * @param {Object} message - Objeto con la información de señalización.
    */
@@ -46,8 +46,14 @@ const signaling = {
     try {
       const messageStr = JSON.stringify(message);
       console.log("Mensaje de señalización a enviar:\n", messageStr);
-      
-      // Intentamos copiar automáticamente al portapapeles
+
+      // Si el mensaje es un ICE Candidate, se evita el auto-copy pues ocurre fuera de un evento de usuario
+      if (message.type === "ice-candidate") {
+        alert("Copie manualmente el siguiente ICE Candidate:\n\n" + messageStr);
+        return;
+      }
+
+      // Para ofertas y respuestas se intenta copiar automáticamente
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(messageStr)
           .then(() => {
@@ -55,10 +61,10 @@ const signaling = {
           })
           .catch(error => {
             console.error("Error al copiar el mensaje al portapapeles:", error);
-            alert("No se pudo copiar el mensaje automáticamente. Por favor, copie manualmente:\n\n" + messageStr);
+            alert("No se pudo copiar el mensaje automáticamente. Por favor, cópielo manualmente:\n\n" + messageStr);
           });
       } else {
-        // Fallback: si el API no está disponible, se usa alert
+        // Fallback: si la API no está disponible, se muestra un alert para copia manual.
         alert("Copie el siguiente mensaje y compártalo con la otra parte:\n\n" + messageStr);
       }
     } catch (e) {
