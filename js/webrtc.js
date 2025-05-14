@@ -4,10 +4,12 @@ const webrtc = {
   localStream: null,
   pc: null,
   dataChannel: null,
-  // Cola para almacenar mensajes que se intenten enviar antes de que el DataChannel esté abierto
+  // Cola para almacenar mensajes pendientes y un flag para evitar logs repetidos
   messageQueue: [],
-  onMessage: null,       // Callback a asignar para recibir mensajes del DataChannel
-  onRemoteStream: null,  // Callback a asignar cuando se reciba el stream remoto
+  _queueWarningLogged: false,
+  
+  onMessage: null,       // Callback para recibir mensajes del DataChannel
+  onRemoteStream: null,  // Callback invocado cuando se recibe el stream remoto
 
   // Configuración del RTCPeerConnection (utilizando un STUN público)
   configuration: {
@@ -18,45 +20,46 @@ const webrtc = {
 
   /**
    * initialize(localStream)
-   * Se utiliza en el lado iniciador (offerer).
-   * - Guarda el stream local.
-   * - Crea la conexión RTCPeerConnection y agrega las pistas locales.
-   * - Crea el DataChannel para chat y lo configura.
-   * - Configura callbacks para ICE candidates, tracks y datachannels.
-   * - Crea una oferta SDP y la envía vía señalización.
+   * Se usa en el lado iniciador (offerer) para:
+   *  - Almacenar el stream local.
+   *  - Crear la conexión RTCPeerConnection y agregar las pistas locales.
+   *  - Crear y configurar el DataChannel para el chat.
+   *  - Configurar callbacks (ICE, ontrack, ondatachannel).
+   *  - Crear una oferta SDP y enviarla vía señalización.
    *
-   * @param {MediaStream} localStream - La transmisión local (obtenida con getUserMedia).
+   * @param {MediaStream} localStream - La transmisión local obtenida con getUserMedia().
    */
   initialize: async function(localStream) {
     this.localStream = localStream;
     this.pc = new RTCPeerConnection(this.configuration);
 
-    // Agregar todas las pistas locales al PeerConnection
+    // Agregar las pistas locales
     localStream.getTracks().forEach(track => {
       this.pc.addTrack(track, localStream);
     });
 
-    // Crear un DataChannel (solo en el lado offerer)
+    // Crear un DataChannel (lado offerer)
     this.dataChannel = this.pc.createDataChannel("chatChannel");
     this.setupDataChannel(this.dataChannel);
 
-    // Configurar el manejo de ICE candidates
+    // Configurar ICE candidates
     this.pc.onicecandidate = (event) => {
       if (event.candidate) {
-        // Enviar el candidato ICE usando el módulo de señalización
-        signaling.send({ type: "ice-candidate", candidate: event.candidate });
+        signaling.send({
+          type: "ice-candidate",
+          candidate: event.candidate
+        });
       }
     };
 
-    // Cuando se reciba el stream remoto
+    // Cuando se recibe el stream remoto
     this.pc.ontrack = (event) => {
       if (this.onRemoteStream) {
-        // Generalmente event.streams[0] contiene el stream completo
         this.onRemoteStream(event.streams[0]);
       }
     };
 
-    // En caso de que la otra parte (answerer) cree un DataChannel, se captura aquí
+    // Si la otra parte crea un DataChannel, se captura aquí
     this.pc.ondatachannel = (event) => {
       this.dataChannel = event.channel;
       this.setupDataChannel(this.dataChannel);
@@ -66,7 +69,10 @@ const webrtc = {
     try {
       const offer = await this.pc.createOffer();
       await this.pc.setLocalDescription(offer);
-      signaling.send({ type: "offer", sdp: this.pc.localDescription });
+      signaling.send({
+        type: "offer",
+        sdp: this.pc.localDescription
+      });
     } catch (err) {
       console.error("Error al crear la oferta:", err);
     }
@@ -74,17 +80,15 @@ const webrtc = {
 
   /**
    * handleSignalingData(data)
-   * Procesa los mensajes de señalización entrantes.
-   * - Si se recibe una "offer", se asigna como _answerer_: se crea la conexión si no existe,
-   *   se establece la descripción remota, se crea la respuesta (answer) y se envía.
-   * - Si se recibe una "answer", se establece la descripción remota.
-   * - Si se recibe un "ice-candidate", se añade al PeerConnection.
+   * Procesa los mensajes entrantes para:
+   *  - Oferta: (si es answerer) establece la descripción remota, crea una respuesta y la envía.
+   *  - Respuesta: establece la descripción remota.
+   *  - ICE Candidate: lo agrega a la conexión.
    *
-   * @param {Object} data - Objeto de señalización entrante.
+   * @param {Object} data - Objeto de señalización recibido.
    */
   handleSignalingData: async function(data) {
     if (data.type === "offer") {
-      // Si no existe la conexión, la creamos (lado answerer)
       if (!this.pc) {
         this.pc = new RTCPeerConnection(this.configuration);
         if (this.localStream) {
@@ -92,19 +96,19 @@ const webrtc = {
             this.pc.addTrack(track, this.localStream);
           });
         }
-        
         this.pc.onicecandidate = (event) => {
           if (event.candidate) {
-            signaling.send({ type: "ice-candidate", candidate: event.candidate });
+            signaling.send({
+              type: "ice-candidate",
+              candidate: event.candidate
+            });
           }
         };
-
         this.pc.ontrack = (event) => {
           if (this.onRemoteStream) {
             this.onRemoteStream(event.streams[0]);
           }
         };
-
         this.pc.ondatachannel = (event) => {
           this.dataChannel = event.channel;
           this.setupDataChannel(this.dataChannel);
@@ -114,7 +118,10 @@ const webrtc = {
         await this.pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
         const answer = await this.pc.createAnswer();
         await this.pc.setLocalDescription(answer);
-        signaling.send({ type: "answer", sdp: this.pc.localDescription });
+        signaling.send({
+          type: "answer",
+          sdp: this.pc.localDescription
+        });
       } catch (err) {
         console.error("Error al procesar la oferta:", err);
       }
@@ -136,15 +143,18 @@ const webrtc = {
   /**
    * sendMessage(message)
    * Envía un mensaje a través del DataChannel. Si el canal no está abierto,
-   * se encola el mensaje para enviarlo cuando el canal se abra.
+   * se encola el mensaje y se registra la advertencia (una única vez).
    *
-   * @param {string} message - El mensaje de texto a enviar.
+   * @param {string} message - Mensaje de texto a enviar.
    */
   sendMessage: function(message) {
     if (this.dataChannel && this.dataChannel.readyState === "open") {
       this.dataChannel.send(message);
     } else {
-      console.warn("El DataChannel no está abierto. Se encolará el mensaje.");
+      if (!this._queueWarningLogged) {
+        console.warn("El DataChannel no está abierto. Se encolará el mensaje.");
+        this._queueWarningLogged = true;
+      }
       this.messageQueue.push(message);
     }
   },
@@ -167,21 +177,23 @@ const webrtc = {
 
   /**
    * setupDataChannel(channel)
-   * Configura el DataChannel asignándole los callbacks para eventos de apertura,
-   * mensaje, error y cierre. Cuando se abra, envía cualquier mensaje pendiente en la cola.
+   * Configura el DataChannel asignándole callbacks para eventos de apertura,
+   * mensaje, error y cierre. Cuando se abra, se envían los mensajes pendientes y
+   * se reinicia la advertencia de cola.
    *
-   * @param {RTCDataChannel} channel - Canal de datos a configurar.
+   * @param {RTCDataChannel} channel - El canal de datos a configurar.
    */
   setupDataChannel: function(channel) {
-    // Evento: cuando el DataChannel esté abierto, enviar todos los mensajes pendientes
     channel.onopen = () => {
       console.log("DataChannel abierto");
+      // Al abrirse, se restablece el flag de advertencia.
+      this._queueWarningLogged = false;
+      // Enviar mensajes pendientes:
       while (this.messageQueue.length > 0) {
         const msg = this.messageQueue.shift();
         channel.send(msg);
       }
     };
-    // Evento: cuando se reciba un mensaje
     channel.onmessage = (event) => {
       console.log("Mensaje recibido vía DataChannel:", event.data);
       if (this.onMessage) {
